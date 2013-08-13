@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libvirt-builder
+Version: @VERSION@
+Description: libvirt builder library
+Requires:
+Libs: -L${libdir} -lvirt-builder-1.0
+Cflags: -I${includedir}/libvirt-builder-1.0

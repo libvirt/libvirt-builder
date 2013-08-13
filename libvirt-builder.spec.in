@@ -1,0 +1,101 @@
+# -*- rpm-spec -*-
+
+%define with_introspection 0
+%define with_python 0
+
+%if 0%{?fedora} >= 15
+%define with_introspection 1
+%endif
+%if 0%{?rhel} >= 6
+%define with_introspection 1
+%endif
+
+
+Name: @PACKAGE@
+Version: @VERSION@
+Release: 1%{?dist}%{?extra_release}
+Summary: Libvirt VM builder
+Group: Development/Tools
+License: LGPLv2+
+URL: http://libvirt.org/
+Source0: http://libvirt.org/sources/builder/%{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+%if %{with_introspection}
+BuildRequires: gobject-introspection-devel
+%endif
+
+%package libs
+Group: Development/Libraries
+Summary: Libvirt configuration builder libraries
+
+%package devel
+Group: Development/Libraries
+Summary: Libvirt configuration builder development headers
+Requires: %{name}-libs = %{version}-%{release}
+
+%description
+This package provides the libvirt configuration builder command
+line tools.
+
+%description libs
+This package provides the libvirt configuration builder run-time
+libraries.
+
+%description devel
+This package provides the libvirt configuration builder development
+headers
+
+%prep
+%setup -q
+
+%build
+
+%if %{with_introspection}
+%define introspection_arg --enable-introspection
+%else
+%define introspection_arg --disable-introspection
+%endif
+
+%configure %{introspection_arg}
+%__make %{?_smp_mflags}
+
+
+%install
+rm -rf $RPM_BUILD_ROOT
+%__make install  DESTDIR=$RPM_BUILD_ROOT
+rm -f $RPM_BUILD_ROOT%{_libdir}/libvirt-builder-1.0.a
+rm -f $RPM_BUILD_ROOT%{_libdir}/libvirt-builder-1.0.la
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%post libs -p /sbin/ldconfig
+%postun libs -p /sbin/ldconfig
+
+%files
+%defattr(-,root,root,-)
+%{_bindir}/virtxml
+%{_mandir}/man1/virtxml.1*
+
+%files libs
+%defattr(-,root,root,-)
+%doc README COPYING AUTHORS ChangeLog NEWS
+%{_libdir}/libvirt-builder-1.0.so.*
+%if %{with_introspection}
+%{_libdir}/girepository-1.0/LibvirtBuilder-1.0.typelib
+%endif
+
+%files devel
+%defattr(-,root,root,-)
+%{_libdir}/libvirt-builder-1.0.so
+%{_libdir}/pkgconfig/libvirt-builder-1.0.pc
+%dir %{_includedir}/libvirt-builder-1.0
+%dir %{_includedir}/libvirt-builder-1.0/libvirt-builder
+%{_includedir}/libvirt-builder-1.0/libvirt-builder/libvirt-builder.h
+%{_includedir}/libvirt-builder-1.0/libvirt-builder/libvirt-builder-*.h
+%if %{with_introspection}
+%{_datadir}/gir-1.0/LibvirtBuilder-1.0.gir
+%endif
+%{_datadir}/gtk-doc/html/libvirt-builder
+
+%changelog
